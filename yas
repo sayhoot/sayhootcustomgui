@@ -1776,8 +1776,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 				RayfieldLibrary:Notify({
 					Title = "Sayhoot Interface",
 					Content = "Fucking die",
-					Duration = 7,
-					Image = 4370033185,
+					Duration = 0,
+					Image = 0,
 				})
 			end
 		end)
