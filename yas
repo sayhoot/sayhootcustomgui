@@ -1,6 +1,6 @@
 --[[
 
-	Rayfield Interface Suite
+	Sayhoot Interface Suite
 	by Sirius
 
 	shlex  | Designing + Programming
@@ -115,14 +115,14 @@ local function secureNotify(wType, title, content)
 	end)
 end
 local InterfaceBuild = 'UU2NX'
-local Release = "Build 1.746"
+local Release = "Sayhoot Build 1.746"
 local RayfieldFolder = "Rayfield"
 local ConfigurationFolder = RayfieldFolder.."/Configurations"
 local ConfigurationExtension = ".rfld"
 local settingsTable = {
 	General = {
 		-- if needs be in order just make getSetting(name)
-		rayfieldOpen = {Type = 'bind', Value = 'K', Name = 'Rayfield Keybind'},
+		rayfieldOpen = {Type = 'bind', Value = 'K', Name = 'Sayhoot Keybind'},
 		-- buildwarnings
 		-- rayfieldprompts
 
@@ -206,7 +206,7 @@ local function loadSettings()
 		-- for debug in studio
 		if useStudio then
 			file = [[
-	{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}
+	{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Sayhoot Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Sayhoot Keybind","Set":null,"CallOnChange":true,"Callback":null,"CurrentKeybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}
 ]]
 		end
 
@@ -283,7 +283,7 @@ if not requestsDisabled and not useStudio then
 				reporter = Analytics.new({
 					url          = "https://rayfield-collect.sirius-software-ltd.workers.dev",
 					token        = ANALYTICS_TOKEN,
-					product_name = "Rayfield",
+					product_name = "Sayhoot",
 					category     = "UILibrary",
 				})
 			end)
@@ -716,7 +716,7 @@ repeat
 
 	if not warned then
 		warn('Rayfield | Build Mismatch')
-		print('Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.')
+		print('Sayhoot may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Sayhoot is intended for interface build '..InterfaceBuild..'.')
 		warned = true
 	end
 
@@ -757,7 +757,7 @@ elseif not useStudio then
 end
 
 if secureMode and not customAssetId then
-	secureNotify("default_asset", "Secure Mode", "You are using the default Rayfield asset ID. Set RAYFIELD_ASSET_ID to a custom upload to avoid detection.")
+	secureNotify("default_asset", "Secure Mode", "You are using the default Sayhoot asset ID. Set RAYFIELD_ASSET_ID to a custom upload to avoid detection.")
 end
 
 do
@@ -1136,7 +1136,7 @@ local function LoadConfiguration(Configuration)
 		else
 			warn("Rayfield | Unable to find '"..FlagName.. "' in the save file.")
 			print("The error above may not be an issue if new elements have been added or not been set values.")
-			--RayfieldLibrary:Notify({Title = "Rayfield Flags", Content = "Rayfield was unable to find '"..FlagName.. "' in the save file. Check sirius.menu/discord for help.", Image = 3944688398})
+			--RayfieldLibrary:Notify({Title = "Sayhoot Flags", Content = "Sayhoot was unable to find '"..FlagName.. "' in the save file. Check sirius.menu/discord for help.", Image = 3944688398})
 		end
 	end
 
@@ -1599,14 +1599,14 @@ local function createSettings(window)
 		return
 	end
 
-	local newTab = window:CreateTab('Rayfield Settings', 0, true)
+	local newTab = window:CreateTab('Sayhoot Settings', 0, true)
 
-	if TabList['Rayfield Settings'] then
-		TabList['Rayfield Settings'].LayoutOrder = 1000
+	if TabList['Sayhoot Settings'] then
+		TabList['Sayhoot Settings'].LayoutOrder = 1000
 	end
 
-	if Elements['Rayfield Settings'] then
-		Elements['Rayfield Settings'].LayoutOrder = 1000
+	if Elements['Sayhoot Settings'] then
+		Elements['Sayhoot Settings'].LayoutOrder = 1000
 	end
 
 	-- Create sections and elements
@@ -1685,7 +1685,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	if not correctBuild and not Settings.DisableBuildWarnings then
 		task.delay(3, 
 			function() 
-				RayfieldLibrary:Notify({Title = 'Build Mismatch', Content = 'This UI may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.', Image = 4335487866, Duration = 15})		
+				RayfieldLibrary:Notify({Title = 'Build Mismatch', Content = 'Sayhoot may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Sayhoot is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.', Image = 4335487866, Duration = 15})		
 			end)
 	end
 
@@ -1724,11 +1724,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	LoadingFrame.Version.TextTransparency = 1
-	LoadingFrame.Title.Text = Settings.LoadingTitle or "Rayfield"
+	LoadingFrame.Title.Text = Settings.LoadingTitle or "Sayhoot"
 	LoadingFrame.Subtitle.Text = Settings.LoadingSubtitle or "Interface Suite"
 
-	if Settings.LoadingTitle ~= "Hey :)" then
-		LoadingFrame.Version.Text = "Sayhoot UI"
+	if Settings.LoadingTitle ~= "Sayhoot Interface Suite" then
+		LoadingFrame.Version.Text = "Rayfield UI"
 	end
 
 	if Settings.Icon and Settings.Icon ~= 0 and Topbar:FindFirstChild('Icon') then
@@ -1766,7 +1766,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	Topbar.Visible = false
 	Elements.Visible = false
-	LoadingFrame.Visible = false
+	LoadingFrame.Visible = true
 
 	if not Settings.DisableRayfieldPrompts then
 		task.spawn(function()
@@ -1775,9 +1775,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 				if rayfieldDestroyed then break end
 				RayfieldLibrary:Notify({
 					Title = "Sayhoot Interface",
-					Content = "Fucking die",
-					Duration = 0,
-					Image = 0,
+					Content = "Enjoying this UI library? Find it at sirius.menu/discord",
+					Duration = 7,
+					Image = 4370033185,
 				})
 			end
 		end)
@@ -3778,7 +3778,7 @@ if Topbar:FindFirstChild('Settings') then
 				end
 			end
 
-			Elements.UIPageLayout:JumpTo(Elements['Rayfield Settings'])
+			Elements.UIPageLayout:JumpTo(Elements['Sayhoot Settings'])
 		end)
 	end)
 
@@ -3852,15 +3852,15 @@ function RayfieldLibrary:LoadConfiguration()
 				end
 			else
 				notified = true
-				RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We couldn't enable Configuration Saving as you are not using software with filesystem support.", Image = 4384402990})
+				RayfieldLibrary:Notify({Title = "Sayhoot Configurations", Content = "We couldn't enable Configuration Saving as you are not using software with filesystem support.", Image = 4384402990})
 			end
 		end)
 
 		if success and loaded and not notified then
-			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "The configuration file for this script has been loaded from a previous session.", Image = 4384403532})
+			RayfieldLibrary:Notify({Title = "Sayhoot Configurations", Content = "The configuration file for this script has been loaded from a previous session.", Image = 4384403532})
 		elseif not success and not notified then
 			warn('Rayfield Configurations Error | '..tostring(result))
-			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We've encountered an issue loading your configuration correctly.\n\nCheck the Developer Console for more information.", Image = 4384402990})
+			RayfieldLibrary:Notify({Title = "Sayhoot Configurations", Content = "We've encountered an issue loading your configuration correctly.\n\nCheck the Developer Console for more information.", Image = 4384402990})
 		end
 	end
 
@@ -3876,10 +3876,10 @@ if useStudio then
 
 	--local Window = RayfieldLibrary:CreateWindow({
 	--	Name = "Rayfield Example Window",
-	--	LoadingTitle = "Hey daughter :)",
+	--	LoadingTitle = "Sayhoot Interface Suite",
 	--	Theme = 'Default',
 	--	Icon = 0,
-	--	LoadingSubtitle = "by Sayhoot",
+	--	LoadingSubtitle = "by Sirius",
 	--	ConfigurationSaving = {
 	--		Enabled = true,
 	--		FolderName = nil, -- Create a custom folder for your hub/game
@@ -3890,15 +3890,15 @@ if useStudio then
 	--		Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
 	--		RememberJoins = true -- Set this to false to make them join the discord every time they load it up
 	--	},
-	--	KeySystem = true, -- Set this to true to use our key system
+	--	KeySystem = false, -- Set this to true to use our key system
 	--	KeySettings = {
-	--		Title = "STOP RIGHT THERE CHILE",
-	--		Subtitle = "sexy key system",
-	--		Note = "girl who the fuck gave u this script",
-	--		FileName = "sayhootflame1", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-	--		SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-	--		GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-	--		Key = {"https://pastebin.com/raw/smBPYAfm"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+	--		Title = "Untitled",
+	--		Subtitle = "Key System",
+	--		Note = "No method of obtaining the key is provided",
+	--		FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+	--		SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+	--		GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+	--		Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
 	--	}
 	--})
 
@@ -3944,7 +3944,7 @@ if useStudio then
 	--})
 
 
-	----RayfieldLibrary:Notify({Title = "Rayfield Interface", Content = "Welcome to Rayfield. These - are the brand new notification design for Rayfield, with custom sizing and Rayfield calculated wait times.", Image = 4483362458})
+	----RayfieldLibrary:Notify({Title = "Sayhoot Interface", Content = "Welcome to Sayhoot. These - are the brand new notification design for Sayhoot, with custom sizing and Sayhoot calculated wait times.", Image = 4483362458})
 
 	--local Section = Tab:CreateSection("Section Example")
 
