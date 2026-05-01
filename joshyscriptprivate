@@ -1,0 +1,309 @@
+--// Services
+local Players = game:GetService('Players')
+local RunService = game:GetService('RunService')
+local UserInputService = game:GetService('UserInputService')
+local CurrentCamera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+--// Config
+local Config = {
+    MouseLockEnabled = true,
+    Smoothness = 0.08,
+    Prediction = 0.250,
+    DynamicLead = 0.06,   -- shifts aim laterally in the direction target moves (camera-relative)
+    HumanNoise = 0.25,    -- subtle random variance per frame to mimic human hand (pixels)
+    LeftOffset = 1.15,
+    UpOffset = -15,
+    HitPart = 'HumanoidRootPart',
+    HipHeightEnabled = true,
+    HipHeightValue = 2
+}.085
+--// Variables
+local target = nil
+local originalHipHeight = nil
+--// Anti-Antilock: position-based velocity (immune to Velocity property spoofing)
+local lastTargetPos = nil
+local lastTargetTime = nil
+local calculatedVelocity = Vector3.new(0, 0, 0)
+local smoothedLateral = 0     -- separately smoothed lateral velocity for DynamicLead (gentler)
+local VEL_CLAMP = 60 -- max studs/sec (normal walk ~16, sprint ~30-40)
+local lastGroundedScreenY = nil  -- frozen Y aim when target is airborne
+local lockActivatedAt = nil      -- tick() when lock was turned on (for ease-in)
+local EASE_IN_DURATION = 0.5    -- seconds to ramp from gentle to full smoothness on toggle
+--// Target Functions
+local function isValidTarget(player)
+    if player ~= LocalPlayer
+        and player.Character
+        and player.Character:FindFirstChildOfClass('Humanoid')
+        and player.Character.Humanoid.Health > 0
+    then
+        local part = player.Character:FindFirstChild(Config.HitPart)
+            or player.Character.PrimaryPart
+        if part then
+            return part
+        end
+    end
+    return nil
+end
+local function getClosestTarget()
+    local closest, shortest = nil, math.huge
+    local mousePos = UserInputService:GetMouseLocation()
+    for _, plr in pairs(Players:GetPlayers()) do
+        local part = isValidTarget(plr)
+        if part then
+            local screenPos = CurrentCamera:WorldToViewportPoint(part.Position)
+            local dist = (Vector2.new(mousePos.X, mousePos.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+            if dist < shortest then
+                closest = part
+                shortest = dist
+            end
+        end
+    end
+    return closest
+end
+--// Load Sayhoot GUI
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/sayhoot/sayhootcustomgui/refs/heads/main/yas'))()
+--// Create Window
+local Window = Rayfield:CreateWindow({
+    Name = "Joshy Flamelock v1",
+    LoadingTitle = "Joshy Flamelock",
+    LoadingSubtitle = "by sayhoot",
+    KeySystem = true,
+    KeySettings = {
+        Title = "don't even think about it girl",
+        Subtitle = "Script made by Sayhoot",
+        Note = "dm sayhoot or joshy 4 key :)",
+        FileName = "joshyflame1",
+        SaveKey = false,
+        GrabKeyFromSite = true,
+        Key = {"https://pastebin.com/raw/KNEX1Kkg"}
+    },
+    ConfigurationSaving = {
+        Enabled = true
+    }
+})
+--// Tab: MouseLock
+local MouseTab = Window:CreateTab("MouseLock", 4483362458)
+MouseTab:CreateSection("MouseLock Settings")
+MouseTab:CreateToggle({
+    Name = "Enable MouseLock",
+    CurrentValue = Config.MouseLockEnabled,
+    Flag = "MouseLockToggle",
+    Callback = function(v)
+        Config.MouseLockEnabled = v
+    end
+})
+MouseTab:CreateInput({
+    Name = "Smoothness",
+    CurrentValue = tostring(Config.Smoothness),
+    PlaceholderText = "0.08",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        local num = tonumber(v)
+        if num then Config.Smoothness = num end
+    end
+})
+MouseTab:CreateInput({
+    Name = "Prediction",
+    CurrentValue = tostring(Config.Prediction),
+    PlaceholderText = "0.250",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        local num = tonumber(v)
+        if num then Config.Prediction = num end
+    end
+})
+MouseTab:CreateInput({
+    Name = "Dynamic Lead",
+    CurrentValue = tostring(Config.DynamicLead),
+    PlaceholderText = "0.06",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        local num = tonumber(v)
+        if num then Config.DynamicLead = num end
+    end
+})
+MouseTab:CreateInput({
+    Name = "Human Noise",
+    CurrentValue = tostring(Config.HumanNoise),
+    PlaceholderText = "0.25",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        local num = tonumber(v)
+        if num then Config.HumanNoise = num end
+    end
+})
+MouseTab:CreateInput({
+    Name = "Left/Right Offset",
+    CurrentValue = tostring(Config.LeftOffset),
+    PlaceholderText = "1.15",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        local num = tonumber(v)
+        if num then Config.LeftOffset = num end
+    end
+})
+MouseTab:CreateInput({
+    Name = "Up/Down Offset",
+    CurrentValue = tostring(Config.UpOffset),
+    PlaceholderText = "-15",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        local num = tonumber(v)
+        if num then Config.UpOffset = num end
+    end
+})
+--// Tab: Hip Height
+local HipTab = Window:CreateTab("Hip Height", 4483362458)
+HipTab:CreateSection("Hip Settings")
+HipTab:CreateToggle({
+    Name = "Enable HipHeight",
+    CurrentValue = Config.HipHeightEnabled,
+    Flag = "HipHeightToggle",
+    Callback = function(v)
+        Config.HipHeightEnabled = v
+        if not v and LocalPlayer.Character then
+            local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
+            if hum and originalHipHeight then
+                hum.HipHeight = originalHipHeight
+            end
+        end
+    end
+})
+HipTab:CreateInput({
+    Name = "HipHeight Value",
+    CurrentValue = tostring(Config.HipHeightValue),
+    PlaceholderText = "2.085",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        local num = tonumber(v)
+        if num then Config.HipHeightValue = num end
+    end
+})
+--// Tab: Settings (Keybinds)
+local SettingsTab = Window:CreateTab("Settings", 4483362458)
+SettingsTab:CreateSection("Keybinds")
+SettingsTab:CreateKeybind({
+    Name = "MouseLock Key",
+    CurrentKeybind = "X",
+    HoldToInteract = false,
+    Flag = "MouseLockKeybind",
+    Callback = function()
+        Config.MouseLockEnabled = not Config.MouseLockEnabled
+        target = Config.MouseLockEnabled and getClosestTarget() or nil
+        if Config.MouseLockEnabled then
+            lockActivatedAt = tick()
+        else
+            lockActivatedAt = nil
+            lastGroundedScreenY = nil
+        end
+    end,
+})
+SettingsTab:CreateKeybind({
+    Name = "HipHeight Key",
+    CurrentKeybind = "H",
+    HoldToInteract = false,
+    Flag = "HipHeightKeybind",
+    Callback = function()
+        Config.HipHeightEnabled = not Config.HipHeightEnabled
+        if not Config.HipHeightEnabled and LocalPlayer.Character then
+            local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
+            if hum and originalHipHeight then
+                hum.HipHeight = originalHipHeight
+            end
+        end
+    end,
+})
+--// Main Loop
+RunService.RenderStepped:Connect(function()
+    -- MouseLock (with anti-antilock bypass)
+    if Config.MouseLockEnabled and target and target.Parent then
+        -- Calculate real velocity from position delta (bypasses Velocity property spoofing)
+        local currentPos = target.Position
+        local now = tick()
+        if lastTargetPos and lastTargetTime then
+            local dt = now - lastTargetTime
+            if dt > 0 then
+                local rawVel = (currentPos - lastTargetPos) / dt
+                -- Clamp to reasonable human speed to reject any residual spikes
+                if rawVel.Magnitude > VEL_CLAMP then
+                    rawVel = rawVel.Unit * VEL_CLAMP
+                end
+                -- Smooth the velocity gently to reduce jitter (0.2 = less reactive than before)
+                calculatedVelocity = calculatedVelocity:Lerp(rawVel, 0.2)
+            end
+        end
+        lastTargetPos = currentPos
+        lastTargetTime = now
+        local targetPos = currentPos + (calculatedVelocity * Config.Prediction)
+        local camRight = CurrentCamera.CFrame.RightVector
+        -- Smoothed lateral lead: lerp separately at 0.1 so direction changes ease in gradually
+        local velRight = calculatedVelocity:Dot(camRight)
+        smoothedLateral = smoothedLateral + (velRight - smoothedLateral) * 0.1
+        local dynamicLeftOffset = Config.LeftOffset + (smoothedLateral * Config.DynamicLead)
+        local offsetVec = (camRight * dynamicLeftOffset) + Vector3.new(0, Config.UpOffset, 0)
+        local finalPos = targetPos + offsetVec
+        local finalScreenPos, onScreen = CurrentCamera:WorldToViewportPoint(finalPos)
+        if onScreen then
+            local mousePos = UserInputService:GetMouseLocation()
+            -- Jump suppression: freeze vertical aim while target is airborne
+            local targetHum = target.Parent and target.Parent:FindFirstChildOfClass("Humanoid")
+            local isAirborne = targetHum and targetHum.FloorMaterial == Enum.Material.Air
+            local effectiveY
+            if isAirborne and lastGroundedScreenY then
+                effectiveY = lastGroundedScreenY  -- hold Y at last grounded position
+            else
+                lastGroundedScreenY = finalScreenPos.Y
+                effectiveY = finalScreenPos.Y
+            end
+            local deltaX = finalScreenPos.X - mousePos.X
+            local deltaY = effectiveY - mousePos.Y
+            -- Ease-in on toggle: ramp from 15% to 100% of configured smoothness over 0.5s
+            local effectiveSmoothness = Config.Smoothness
+            if lockActivatedAt then
+                local elapsed = tick() - lockActivatedAt
+                if elapsed < EASE_IN_DURATION then
+                    local t = elapsed / EASE_IN_DURATION
+                    effectiveSmoothness = Config.Smoothness * (0.15 + 0.85 * t)
+                else
+                    lockActivatedAt = nil
+                end
+            end
+            local moveX = deltaX * effectiveSmoothness
+            local moveY = deltaY * effectiveSmoothness
+            if math.abs(moveX) > 0.01 or math.abs(moveY) > 0.01 then
+                pcall(function()
+                    -- Add subtle random noise to mimic human hand imprecision
+                    local nx = (math.random() - 0.5) * 2 * Config.HumanNoise
+                    local ny = (math.random() - 0.5) * 2 * Config.HumanNoise
+                    mousemoverel(moveX + nx, moveY + ny)
+                end)
+            end
+        end
+    else
+        -- Reset velocity tracking when not locked
+        lastTargetPos = nil
+        lastTargetTime = nil
+        calculatedVelocity = Vector3.new(0, 0, 0)
+        smoothedLateral = 0
+        lastGroundedScreenY = nil
+        lockActivatedAt = nil
+    end
+    -- HipHeight
+    if Config.HipHeightEnabled and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
+        if hum then
+            if not originalHipHeight then
+                originalHipHeight = hum.HipHeight
+            end
+            hum.HipHeight = Config.HipHeightValue
+        end
+    end
+end)
+--// Character Handling
+LocalPlayer.CharacterAdded:Connect(function(char)
+    local hum = char:WaitForChild("Humanoid")
+    originalHipHeight = hum.HipHeight
+    if Config.HipHeightEnabled then
+        hum.HipHeight = Config.HipHeightValue
+    end
+end)
